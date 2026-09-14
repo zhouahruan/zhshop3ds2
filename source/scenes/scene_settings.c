@@ -129,10 +129,17 @@ static void settings_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void settings_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_settings_vtable = {
     .name = "settings",
     .on_enter  = settings_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = settings_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = settings_update,

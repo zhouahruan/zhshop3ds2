@@ -165,10 +165,17 @@ static void applist_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void applist_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_applist_vtable = {
     .name = "applist",
     .on_enter  = applist_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = applist_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = applist_update,

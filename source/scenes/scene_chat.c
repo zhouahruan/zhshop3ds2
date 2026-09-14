@@ -146,10 +146,17 @@ static void chat_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void chat_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_chat_vtable = {
     .name = "chat",
     .on_enter  = chat_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = chat_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = chat_update,
