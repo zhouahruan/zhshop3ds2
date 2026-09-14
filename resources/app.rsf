@@ -1,0 +1,55 @@
+BasicInfo:
+  Title: "3DS App Store"
+  CompanyCode: "00"
+  ProductCode: "CTR-P-HAPP"
+  ContentType: Application
+  Logo: Homebrew
+
+TitleInfo:
+  UniqueId: 0xF8001
+  Category: Application
+
+AccessControlInfo:
+  CoreVersion: 2
+  DescVersion: 0x0400
+  Priority: 16
+  UseExtSaveData: false
+  ExtSaveDataId: 0x00000
+  SystemSaveDataId1: 0x00000000
+  SystemSaveDataId2: 0x00000000
+  OtherUserSaveDataId1: 0x00000
+  OtherUserSaveDataId2: 0x00000
+  OtherUserSaveDataId3: 0x00000
+  UseOtherVariationSaveData: false
+  HandleTableSize: 0x200
+  SystemCallAccess:
+    svcSetProcessorAddressSpace: false
+  ServiceAccessControl:
+    - "cfg:s"
+    - "cfg:u"
+    - "ptm:u"
+    - "ptm:sysm"
+    - "hid:USER"
+    - "fs:USER"
+    - "frd:u"
+    - "http:C"
+    - "ssl:C"
+    - "soc:u"
+    - "csnd:SND"
+    - "dsp::DSP"
+    - "gsp::Gpu"
+    - "gsp::Lcd"
+    - "mvd:STD"
+    - "ns:s"
+    - "ns:am"
+    - "am:net"
+    - "am:u"
+    - "ac:u"
+    - "act:u"
+    - "y2r:u"
+    - "mcu:HWC"
+
+SystemControlInfo:
+  SaveDataSize: 256K
+  StackSize: 0x40000
+  JumpId: 0x000400000F800100

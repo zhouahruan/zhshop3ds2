@@ -1,0 +1,2 @@
+# Empty marker — drop icon.png / banner.png / ui_sprites.png / *.bcfnt here.
+# The Makefile picks them up via the ICON and BANNER_IMAGE variables.

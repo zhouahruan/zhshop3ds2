@@ -1,0 +1,55 @@
+#---------------------------------------------------------------------------------
+# devkitARM base rules - adapted for Ubuntu arm-none-eabi toolchain
+#---------------------------------------------------------------------------------
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+export DEVKITARM	:=	$(DEVKITARM)
+export TOOL_PREFIX	:=	arm-none-eabi-
+export CC			:=	$(TOOL_PREFIX)gcc
+export CXX			:=	$(TOOL_PREFIX)g++
+export AS			:=	$(TOOL_PREFIX)as
+export AR			:=	$(TOOL_PREFIX)ar
+export OBJCOPY		:=	$(TOOL_PREFIX)objcopy
+export LD			:=	$(TOOL_PREFIX)gcc
+export NM			:=	$(TOOL_PREFIX)nm
+export RANLIB		:=	$(TOOL_PREFIX)ranlib
+export STRIP		:=	$(TOOL_PREFIX)strip
+export GDB			:=	$(TOOL_PREFIX)gdb
+
+# INCLUDE is set by the project Makefile; only provide a default if unset
+INCLUDE ?= -I$(DEVKITARM)/include
+
+#---------------------------------------------------------------------------------
+# canned command sequence for binary data
+#---------------------------------------------------------------------------------
+define bin2o
+	bin2s $< | $(AS) -o $(@)
+	echo "extern const u8" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(<F) | tr . _)`.h
+	echo "extern const u8" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(<F) | tr . _)`.h
+	echo "extern const u32" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(<F) | tr . _)`.h
+endef
+
+#---------------------------------------------------------------------------------
+# Compilation pattern rules
+#---------------------------------------------------------------------------------
+%.o : %.c
+	@echo $(notdir $<)
+	$(CC) $(CFLAGS) -MMD -MP -MF $(DEPSDIR)/$*.d -c $< -o $@
+
+%.o : %.m
+	@echo $(notdir $<)
+	$(CC) $(OBJCFLAGS) -MMD -MP -MF $(DEPSDIR)/$*.d -c $< -o $@
+
+%.o : %.cpp
+	@echo $(notdir $<)
+	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(DEPSDIR)/$*.d -c $< -o $@
+
+%.o : %.s
+	@echo $(notdir $<)
+	$(AS) $(ASFLAGS) -c $< -o $@
+
+%.o : %.S
+	@echo $(notdir $<)
+	$(CC) $(CFLAGS) -MMD -MP -MF $(DEPSDIR)/$*.d -c $< -o $@
