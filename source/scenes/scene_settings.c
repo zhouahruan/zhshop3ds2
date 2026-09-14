@@ -1,4 +1,5 @@
 #include "scene_settings.h"
+#include "nav.h"
 #include "../core/utils.h"
 #include "../core/render.h"
 #include "../core/input.h"

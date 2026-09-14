@@ -55,10 +55,10 @@ CFLAGS  +=      $(INCLUDE) -D__3DS__ -DNO_WARNING_STD_WRAPPERS \
 CXXFLAGS        := $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS :=      -g $(ARCH)
-LDFLAGS :=       -g $(ARCH) -B$(DEVKITARM) -specs=3dsx.specs -L/opt/devkitpro/newlib-armv6k/arm-none-eabi/lib -L$(DEVKITARM)/lib -L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu -Wl,-Map,$(notdir $*.map) \
+LDFLAGS :=       -g $(ARCH) -B$(DEVKITARM) -specs=3dsx.specs -Wl,-Map,$(notdir $*.map) \
                         -Wl,--gc-sections
 
-LIBS    :=      -lcitro2d -lcitro3d -lctru -lsysbase -lc -ljansson -lm
+LIBS    :=      -lcitro2d -lcitro3d -lctru -ljansson -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -208,10 +208,6 @@ $(OUTPUT).elf   :       $(OFILES)
 $(OUTPUT).3dsx  :       $(OUTPUT).elf $(_3DSXDEPS)
 	@echo "building $(notdir $@)"
 	@3dsxtool $< $@ $(_3DSXFLAGS)
-
-$(OUTPUT).smdh  :       $(APP_ICON)
-	@echo "building $(notdir $@)"
-	@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $< $@
 
 $(OFILES_SOURCES) : $(HFILES)
 
