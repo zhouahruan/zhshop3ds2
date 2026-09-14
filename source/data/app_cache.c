@@ -8,17 +8,10 @@
 #include <sys/types.h>
 
 static void ensure_dir(void) {
-    FS_Archive sdmc;
-    if (R_FAILED(FSUSER_OpenArchive(&sdmc, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, "")))) {
-        return;
-    }
-    FS_DirectoryEntry entry;
-    memset(&entry, 0, sizeof(entry));
     /* Best-effort: create the path via mkdir() on the sdmc: mount. */
     mkdir("sdmc:/3ds",            0777);
     mkdir("sdmc:/3ds/appstore",   0777);
     mkdir(CACHE_DIR,              0777);
-    FSUSER_CloseArchive(sdmc);
 }
 
 int cache_save_app_list(const char* key, const char* body) {
