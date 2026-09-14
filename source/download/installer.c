@@ -35,16 +35,20 @@ static Result copy_to_temp(const char* cia_path, u64* out_size) {
     /* AM_InstallCia needs a buffered file handle. Use bufferedRead. */
     Handle fh;
     FS_Path archPath, filePath;
-    /* On real 3DS the path string must be UTF-16 in the form u:/<path>.
-     * We translate sdmc:/ -> u:/. */
+    /* On real 3DS the path string must be UTF-16 starting with / for SD card. */
     char upath[256];
-    snprintf(upath, sizeof(upath), "u:/%s", cia_path + 5); /* skip "sdmc" */
-    ssize_t units = utf8_to_utf16((u16*)upath, (const u8*)upath, sizeof(upath));
+    if (strncmp(cia_path, "sdmc:/", 6) == 0) {
+        snprintf(upath, sizeof(upath), "/%s", cia_path + 6);
+    } else {
+        snprintf(upath, sizeof(upath), "%s", cia_path);
+    }
+    u16 utf16_path[256];
+    ssize_t units = utf8_to_utf16(utf16_path, (const u8*)upath, sizeof(utf16_path)/sizeof(u16));
     if (units < 0) { fclose(fp); return -1; }
 
     /* Use FSUSER to open a buffered cia read handle. */
     archPath = (FS_Path){ PATH_EMPTY, 0, NULL };
-    filePath = (FS_Path){ PATH_UTF16, units * 2, upath };
+    filePath = (FS_Path){ PATH_UTF16, (u32)(units + 1) * 2, utf16_path };
 
     Result rc = FSUSER_OpenFileDirectly(&fh, ARCHIVE_SDMC, archPath,
                                          filePath, FS_OPEN_READ,

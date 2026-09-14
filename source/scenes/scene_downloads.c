@@ -157,10 +157,17 @@ static void downloads_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void downloads_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_downloads_vtable = {
     .name = "downloads",
     .on_enter  = downloads_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = downloads_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = downloads_update,

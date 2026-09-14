@@ -3,8 +3,10 @@
  * Static — no heap allocation; safe to call repeatedly.
  */
 #include "../api.h"
+#include "../json_parse.h"
 #include "../../core/utils.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static App s_apps[] = {
@@ -90,7 +92,10 @@ static const int s_categories_count = (int)(sizeof(s_categories) / sizeof(s_cate
 
 int mock_get_recommend(AppList* out) {
     if (!out) return 0;
-    out->items = s_apps;
+    json_free_app_list(out);
+    out->items = calloc(s_apps_count, sizeof(App));
+    if (!out->items) return 0;
+    memcpy(out->items, s_apps, sizeof(s_apps));
     out->count = s_apps_count;
     out->total = s_apps_count;
     out->page  = 1;
@@ -99,7 +104,10 @@ int mock_get_recommend(AppList* out) {
 
 int mock_get_categories(CategoryList* out) {
     if (!out) return 0;
-    out->items = s_categories;
+    json_free_category_list(out);
+    out->items = calloc(s_categories_count, sizeof(Category));
+    if (!out->items) return 0;
+    memcpy(out->items, s_categories, sizeof(s_categories));
     out->count = s_categories_count;
     return 1;
 }
@@ -112,7 +120,10 @@ int mock_get_app_list(const char* category_id, const char* keyword,
     (void)sort; (void)page; (void)page_size;
     (void)region; (void)cfw_required; (void)min_firmware;
     if (!out) return 0;
-    out->items = s_apps;
+    json_free_app_list(out);
+    out->items = calloc(s_apps_count, sizeof(App));
+    if (!out->items) return 0;
+    memcpy(out->items, s_apps, sizeof(s_apps));
     out->count = s_apps_count;
     out->total = s_apps_count;
     out->page  = 1;

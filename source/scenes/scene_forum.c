@@ -150,10 +150,17 @@ static void forum_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void forum_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_forum_vtable = {
     .name = "forum",
     .on_enter  = forum_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = forum_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = forum_update,

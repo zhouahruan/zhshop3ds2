@@ -119,6 +119,7 @@ static void parse_app_into(const json_t* o, App* a) {
 
 int json_parse_app_list(const char* body, AppList* out) {
     if (!body || !out) return 0;
+    json_free_app_list(out);
     memset(out, 0, sizeof(*out));
     json_error_t err;
     json_t* root = json_loads(body, 0, &err);
@@ -158,6 +159,7 @@ void json_free_app_list(AppList* p) {
 
 int json_parse_category_list(const char* body, CategoryList* out) {
     if (!body || !out) return 0;
+    json_free_category_list(out);
     memset(out, 0, sizeof(*out));
     json_error_t err;
     json_t* root = json_loads(body, 0, &err);
@@ -251,6 +253,7 @@ static void parse_post_into(const json_t* o, Post* p) {
 
 int json_parse_post_list(const char* body, PostList* out) {
     if (!body || !out) return 0;
+    json_free_post_list(out);
     memset(out, 0, sizeof(*out));
     json_error_t err;
     json_t* root = json_loads(body, 0, &err);
@@ -320,6 +323,7 @@ void json_free_reply_list(ReplyList* p) {
 
 int json_parse_session_list(const char* body, SessionList* out) {
     if (!body || !out) return 0;
+    json_free_session_list(out);
     memset(out, 0, sizeof(*out));
     json_error_t err;
     json_t* root = json_loads(body, 0, &err);
@@ -356,6 +360,7 @@ void json_free_session_list(SessionList* p) {
 
 int json_parse_message_list(const char* body, MessageList* out) {
     if (!body || !out) return 0;
+    json_free_message_list(out);
     memset(out, 0, sizeof(*out));
     json_error_t err;
     json_t* root = json_loads(body, 0, &err);

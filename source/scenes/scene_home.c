@@ -181,10 +181,17 @@ static void home_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void home_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_home_vtable = {
     .name = "home",
     .on_enter  = home_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = home_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = home_update,

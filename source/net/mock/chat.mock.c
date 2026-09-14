@@ -2,7 +2,9 @@
  * Mock chat data (sessions + messages).
  */
 #include "../api.h"
+#include "../json_parse.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static ChatSession s_sessions[] = {
@@ -26,19 +28,31 @@ static Message s_msgs_s2[] = {
 
 int mock_get_chat_sessions(SessionList* out) {
     if (!out) return 0;
-    out->items = s_sessions;
+    json_free_session_list(out);
+    out->items = calloc(s_sessions_count, sizeof(ChatSession));
+    if (!out->items) return 0;
+    memcpy(out->items, s_sessions, sizeof(s_sessions));
     out->count = s_sessions_count;
     return 1;
 }
 
 int mock_get_messages(const char* session_id, MessageList* out) {
     if (!session_id || !out) return 0;
+    json_free_message_list(out);
     if (strcmp(session_id, "s1") == 0) {
-        out->items = s_msgs_s1;
-        out->count = (int)(sizeof(s_msgs_s1)/sizeof(s_msgs_s1[0]));
+        int count = (int)(sizeof(s_msgs_s1)/sizeof(s_msgs_s1[0]));
+        out->items = calloc(count, sizeof(Message));
+        if (out->items) {
+            memcpy(out->items, s_msgs_s1, sizeof(s_msgs_s1));
+            out->count = count;
+        }
     } else if (strcmp(session_id, "s2") == 0) {
-        out->items = s_msgs_s2;
-        out->count = (int)(sizeof(s_msgs_s2)/sizeof(s_msgs_s2[0]));
+        int count = (int)(sizeof(s_msgs_s2)/sizeof(s_msgs_s2[0]));
+        out->items = calloc(count, sizeof(Message));
+        if (out->items) {
+            memcpy(out->items, s_msgs_s2, sizeof(s_msgs_s2));
+            out->count = count;
+        }
     } else {
         out->items = NULL;
         out->count = 0;

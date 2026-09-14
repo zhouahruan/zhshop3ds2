@@ -2,7 +2,9 @@
  * Mock forum data (posts + replies).
  */
 #include "../api.h"
+#include "../json_parse.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static Post s_posts[] = {
@@ -32,7 +34,10 @@ static Reply s_replies_post1[] = {
 int mock_get_post_list(int page, PostList* out) {
     (void)page;
     if (!out) return 0;
-    out->items = s_posts;
+    json_free_post_list(out);
+    out->items = calloc(s_posts_count, sizeof(Post));
+    if (!out->items) return 0;
+    memcpy(out->items, s_posts, sizeof(s_posts));
     out->count = s_posts_count;
     out->total = s_posts_count;
     out->page  = 1;
@@ -45,9 +50,14 @@ int mock_get_post_detail(const char* post_id, Post* out, ReplyList* out_replies)
         if (strcmp(s_posts[i].id, post_id) == 0) {
             *out = s_posts[i];
             if (out_replies) {
+                json_free_reply_list(out_replies);
                 if (strcmp(post_id, "post-1") == 0) {
-                    out_replies->items = s_replies_post1;
-                    out_replies->count = (int)(sizeof(s_replies_post1)/sizeof(s_replies_post1[0]));
+                    int count = (int)(sizeof(s_replies_post1)/sizeof(s_replies_post1[0]));
+                    out_replies->items = calloc(count, sizeof(Reply));
+                    if (out_replies->items) {
+                        memcpy(out_replies->items, s_replies_post1, sizeof(s_replies_post1));
+                        out_replies->count = count;
+                    }
                 } else {
                     out_replies->items = NULL;
                     out_replies->count = 0;

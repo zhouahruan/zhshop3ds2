@@ -149,10 +149,17 @@ static void detail_draw(Scene* self, ScreenId screen) {
     }
 }
 
+static void detail_on_exit(Scene* self) {
+    if (self->state) {
+        free(self->state);
+        self->state = NULL;
+    }
+}
+
 static const SceneVTable s_detail_vtable = {
     .name = "detail",
     .on_enter  = detail_on_enter,
-    .on_exit   = NULL,
+    .on_exit   = detail_on_exit,
     .on_pause  = NULL,
     .on_resume = NULL,
     .update    = detail_update,

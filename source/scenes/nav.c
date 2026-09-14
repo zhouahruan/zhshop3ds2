@@ -30,8 +30,9 @@ static const NavItem NAV_ITEMS[5] = {
     { "Chat",     scene_chat_get     },
 };
 
-/* Track which nav button is focused for gamepad navigation. */
+/* Track which nav button is focused and active for navigation. */
 static int s_nav_focus = 0;
+static int s_active_index = 0;
 
 int nav_handle_touch(const TouchState* t) {
     if (!t || !t->touch_pressed) return 0;
@@ -40,31 +41,25 @@ int nav_handle_touch(const TouchState* t) {
         float bx = NAV_X + i * (NAV_BTN_W + NAV_GAP);
         if (t->tx >= bx && t->tx <= bx + NAV_BTN_W) {
             s_nav_focus = i;
-            Scene* s = NAV_ITEMS[i].get();
-            scene_manager_switch(s, NULL);
+            if (i != s_active_index) {
+                Scene* s = NAV_ITEMS[i].get();
+                scene_manager_switch(s, NULL);
+            }
             return 1;
         }
     }
     return 0;
 }
 
-/* Handle gamepad left/right to move focus, A to activate. Returns 1 if
- * consumed. Called from every scene's update before its own widgets. */
+/* Handle gamepad nav selection. Only switch scene if A is pressed on a
+ * nav button different from the currently active scene. */
 int nav_handle_gamepad(void) {
-    uint8_t nav = input_nav_pressed();
-    if (nav & NAV_LEFT) {
-        if (s_nav_focus > 0) s_nav_focus--;
-        else s_nav_focus = 4;
-        return 1;
-    }
-    if (nav & NAV_RIGHT) {
-        s_nav_focus = (s_nav_focus + 1) % 5;
-        return 1;
-    }
     if (input_pressed(KEY_A_3DS)) {
-        Scene* s = NAV_ITEMS[s_nav_focus].get();
-        scene_manager_switch(s, NULL);
-        return 1;
+        if (s_nav_focus >= 0 && s_nav_focus < 5 && s_nav_focus != s_active_index) {
+            Scene* s = NAV_ITEMS[s_nav_focus].get();
+            scene_manager_switch(s, NULL);
+            return 1;
+        }
     }
     return 0;
 }
@@ -76,7 +71,10 @@ void nav_set_focus(int idx) {
 }
 
 void nav_draw(int active_index) {
-    /* Only update focus on first draw or if no focus set yet. */
+    if (active_index >= 0 && active_index < 5) {
+        s_active_index = active_index;
+        s_nav_focus = active_index;
+    }
     render_draw_rect(NAV_X - 2, NAV_Y - 2, NAV_W + 4, NAV_H + 4, C_BEZEL);
     for (int i = 0; i < 5; ++i) {
         float bx = NAV_X + i * (NAV_BTN_W + NAV_GAP);
