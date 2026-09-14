@@ -22,18 +22,21 @@
 #include "core/transition.h"
 #include "core/utils.h"
 #include "data/store.h"
+#include "download/downloader.h"
+#include "download/installer.h"
 #include "scenes/scene_splash.h"
 
 /* Frame timing: 3DS runs the main loop targeting 60 fps. */
 #define TARGET_FPS 60
 #define FRAME_NS   (1000000000ULL / TARGET_FPS)
 
-/* SOC (network) buffer. 1 MiB aligned to a page boundary. httpc needs a
+/* SOC (network) buffer. 1 MiB allocated from 3DS linear memory. httpc needs a
  * reasonably large SOC heap; 256 KiB is too small and causes socInit to
  * silently fail on some firmware versions. */
 #define SOC_BUFFER_SIZE  0x100000
-#define SOC_BUFFER_ALIGN 0x1000
-static u32 s_soc_buffer[SOC_BUFFER_SIZE / sizeof(u32)] __attribute__((aligned(SOC_BUFFER_ALIGN)));
+static u32* s_soc_buffer = NULL;
+static int s_soc_ok = 0;
+static int s_httpc_ok = 0;
 static int s_romfs_ok = 0;
 static int s_cfgu_ok = 0;
 static int s_ac_ok = 0;
@@ -98,15 +101,33 @@ static void init_subsystems(void) {
     s_ac_ok = R_SUCCEEDED(acInit());
     if (!s_ac_ok) log_step("boot: acInit FAILED");
     log_step("boot: socInit");
-    socInit(s_soc_buffer, SOC_BUFFER_SIZE);
-    log_step("boot: httpcInit");
-    httpcInit(0);
+    s_soc_buffer = (u32*)linearAlloc(SOC_BUFFER_SIZE);
+    if (s_soc_buffer) {
+        s_soc_ok = R_SUCCEEDED(socInit(s_soc_buffer, SOC_BUFFER_SIZE));
+        if (!s_soc_ok) {
+            log_step("boot: socInit FAILED");
+            linearFree(s_soc_buffer);
+            s_soc_buffer = NULL;
+        }
+    } else {
+        log_step("boot: linearAlloc for SOC FAILED");
+    }
 
-    /* Application-level state. */
+    if (s_soc_ok) {
+        log_step("boot: httpcInit");
+        s_httpc_ok = R_SUCCEEDED(httpcInit(0));
+        if (!s_httpc_ok) log_step("boot: httpcInit FAILED");
+    }
+
+    /* Application-level state and download/installer subsystems. */
     log_step("boot: app_init");
     app_init();
     log_step("boot: store_init");
     store_init();
+    log_step("boot: downloader_init");
+    downloader_init();
+    log_step("boot: installer_init");
+    installer_init();
     log_step("boot: render_init");
     render_init();
     log_step("boot: transition_init");
@@ -120,11 +141,18 @@ static void shutdown_subsystems(void) {
     scene_manager_shutdown();
     render_exit();
 
+    installer_exit();
+    downloader_exit();
+
     store_free_lists();
     app_exit();
 
-    httpcExit();
-    socExit();
+    if (s_httpc_ok) httpcExit();
+    if (s_soc_ok) socExit();
+    if (s_soc_buffer) {
+        linearFree(s_soc_buffer);
+        s_soc_buffer = NULL;
+    }
     if (s_ac_ok) acExit();
 
     if (s_romfs_ok) romfsExit();

@@ -16,6 +16,8 @@ static Scene* s_pending_switch = NULL;
 static void*  s_pending_switch_args = NULL;
 static int    s_pending_reset = 0;
 
+static void apply_pending(void);
+
 void scene_manager_init(void) {
     s_top = -1;
     s_pending_push = NULL;
@@ -37,7 +39,12 @@ void scene_manager_push(Scene* s, void* args) {
     if (!s) return;
     s_pending_push = s;
     s_pending_push_args = args;
-    transition_start_in();
+    if (s_top < 0) {
+        /* Initial scene on empty stack: apply immediately without transition delay */
+        apply_pending();
+    } else {
+        transition_start_in();
+    }
 }
 
 void scene_manager_pop(void) {
@@ -130,8 +137,12 @@ void scene_manager_update(void) {
     if (transition_done()) {
         apply_pending();
     }
-    Scene* cur = scene_manager_current();
-    if (cur && cur->vtable && cur->vtable->update) cur->vtable->update(cur);
+    /* Only update scene logic when no transition is in progress to prevent
+     * re-entrant navigation triggers during scene fades. */
+    if (!transition_in_progress()) {
+        Scene* cur = scene_manager_current();
+        if (cur && cur->vtable && cur->vtable->update) cur->vtable->update(cur);
+    }
 }
 
 void scene_manager_draw(ScreenId screen) {

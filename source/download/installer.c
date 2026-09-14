@@ -43,12 +43,13 @@ static Result copy_to_temp(const char* cia_path, u64* out_size) {
         snprintf(upath, sizeof(upath), "%s", cia_path);
     }
     u16 utf16_path[256];
-    ssize_t units = utf8_to_utf16(utf16_path, (const u8*)upath, sizeof(utf16_path)/sizeof(u16));
+    ssize_t units = utf8_to_utf16(utf16_path, (const u8*)upath, (sizeof(utf16_path)/sizeof(u16)) - 1);
     if (units < 0) { fclose(fp); return -1; }
+    utf16_path[units] = 0;
 
     /* Use FSUSER to open a buffered cia read handle. */
     archPath = (FS_Path){ PATH_EMPTY, 0, NULL };
-    filePath = (FS_Path){ PATH_UTF16, (u32)(units + 1) * 2, utf16_path };
+    filePath = (FS_Path){ PATH_UTF16, (u32)(units + 1) * sizeof(u16), utf16_path };
 
     Result rc = FSUSER_OpenFileDirectly(&fh, ARCHIVE_SDMC, archPath,
                                          filePath, FS_OPEN_READ,
