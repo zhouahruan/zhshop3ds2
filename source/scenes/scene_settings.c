@@ -9,6 +9,7 @@
 #include "../net/http.h"
 #include "../ui/button.h"
 #include "../ui/modal.h"
+#include "nav.h"
 
 #include <3ds.h>
 #include <stdlib.h>

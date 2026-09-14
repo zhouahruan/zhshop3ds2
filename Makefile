@@ -211,7 +211,7 @@ $(OUTPUT).3dsx  :       $(OUTPUT).elf $(_3DSXDEPS)
 
 $(OUTPUT).smdh  :       $(APP_ICON)
 	@echo "building $(notdir $@)"
-	@$(SMDHTOOL) --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $< $@
+	@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $< $@
 
 $(OFILES_SOURCES) : $(HFILES)
 
