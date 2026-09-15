@@ -42,6 +42,7 @@ AccessControlInfo:
     - "mvd:STD"
     - "ns:s"
     - "ns:am"
+    - "am:app"
     - "am:net"
     - "am:u"
     - "ac:u"
