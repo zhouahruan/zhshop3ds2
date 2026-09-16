@@ -25,6 +25,7 @@ AccessControlInfo:
   SystemCallAccess:
     svcSetProcessorAddressSpace: false
   ServiceAccessControl:
+    - "apt:u"
     - "cfg:s"
     - "cfg:u"
     - "ptm:u"
