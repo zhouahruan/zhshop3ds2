@@ -22,16 +22,8 @@ RUN curl -sL https://github.com/3DSGuy/Project_CTR/archive/refs/heads/master.tar
     cp /tmp/Project_CTR-master/makerom/bin/makerom /opt/devkitpro/tools/bin/makerom && \
     rm -rf /tmp/Project_CTR-master
 
-# Install extra 3DS libraries
-RUN dkp-pacman -Syu --noconfirm && \
-    dkp-pacman -S --noconfirm --needed \
-        3ds-jansson \
-        3ds-curl \
-        libctru \
-        citro3d \
-        citro2d \
-        3ds-zlib \
-    && dkp-pacman -Scc --noconfirm
+# Note: devkitpro/devkitarm:latest pre-installs 3ds-jansson, 3ds-curl, libctru, citro3d, citro2d, and 3ds-zlib.
+# dkp-pacman is omitted here to prevent Cloudflare 403 errors on CI runners when fetching from pkg.devkitpro.org.
 
 # Copy project files
 COPY . .
