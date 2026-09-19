@@ -6,7 +6,9 @@ LABEL description="Build environment for Nintendo 3DS homebrew app store"
 WORKDIR /project
 
 # Install build dependencies for makerom
-RUN apt-get update && \
+# Remove devkitpro apt source list to avoid Cloudflare 522/403 errors on apt-get update
+RUN rm -f /etc/apt/sources.list.d/devkitpro.list && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
         curl \
         build-essential \

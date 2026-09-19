@@ -101,7 +101,7 @@ static void init_subsystems(void) {
     s_ac_ok = R_SUCCEEDED(acInit());
     if (!s_ac_ok) log_step("boot: acInit FAILED");
     log_step("boot: socInit");
-    s_soc_buffer = (u32*)linearAlloc(SOC_BUFFER_SIZE);
+    s_soc_buffer = (u32*)linearMemAlign(SOC_BUFFER_SIZE, 0x1000);
     if (s_soc_buffer) {
         s_soc_ok = R_SUCCEEDED(socInit(s_soc_buffer, SOC_BUFFER_SIZE));
         if (!s_soc_ok) {

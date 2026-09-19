@@ -24,7 +24,7 @@ static char* alloc_aligned_url(const char* url) {
     if (!url) return NULL;
     size_t len = strlen(url);
     size_t cap = ((len + 0x1000) / 0x1000) * 0x1000;
-    char* buf = (char*)linearAlloc(cap);
+    char* buf = (char*)linearMemAlign(cap, 0x1000);
     if (!buf) return NULL;
     memcpy(buf, url, len + 1);
     return buf;
@@ -107,23 +107,34 @@ NetStatus http_get(const char* url, NetResult* out) {
 
     httpcContext ctx;
     Result rc = httpcOpenContext(&ctx, HTTPC_METHOD_GET, aligned, 0);
-    linearFree(aligned);
-    if (R_FAILED(rc)) return NET_FAIL;
+    if (R_FAILED(rc)) {
+        linearFree(aligned);
+        return NET_FAIL;
+    }
 
     apply_default_headers(&ctx);
     apply_ssl(&ctx);
 
     rc = httpcBeginRequest(&ctx);
-    if (R_FAILED(rc)) { httpcCloseContext(&ctx); return NET_FAIL; }
+    if (R_FAILED(rc)) {
+        httpcCloseContext(&ctx);
+        linearFree(aligned);
+        return NET_FAIL;
+    }
 
     u32 code = 0;
     rc = httpcGetResponseStatusCodeTimeout(&ctx, &code, HTTP_TIMEOUT_NS);
-    if (R_FAILED(rc)) { httpcCloseContext(&ctx); return NET_FAIL; }
+    if (R_FAILED(rc)) {
+        httpcCloseContext(&ctx);
+        linearFree(aligned);
+        return NET_FAIL;
+    }
     out->http_code = (int)code;
 
     u32 got = 0;
     char* buf = read_body(&ctx, &got);
     httpcCloseContext(&ctx);
+    linearFree(aligned);
     if (!buf) return NET_FAIL;
 
     out->data = buf;
@@ -141,26 +152,36 @@ NetStatus http_post(const char* url, const char* body, NetResult* out) {
 
     httpcContext ctx;
     Result rc = httpcOpenContext(&ctx, HTTPC_METHOD_POST, aligned, 0);
-    linearFree(aligned);
-    if (R_FAILED(rc)) return NET_FAIL;
+    if (R_FAILED(rc)) {
+        linearFree(aligned);
+        return NET_FAIL;
+    }
 
     apply_default_headers(&ctx);
     httpcAddRequestHeaderField(&ctx, "Content-Type", "application/json");
     apply_ssl(&ctx);
 
+    void* pdata = NULL;
     if (body && body[0]) {
         size_t blen = strlen(body);
-        /* httpcAddPostDataRaw expects u32-aligned data; copy to aligned buf. */
-        void* pdata = linearAlloc((blen + 63) & ~63u);
+        /* httpcAddPostDataRaw expects 0x1000-aligned data; copy to aligned buf. */
+        size_t pcap = (blen + 0x0FFF) & ~0x0FFFu;
+        if (pcap < 0x1000) pcap = 0x1000;
+        pdata = linearMemAlign(pcap, 0x1000);
         if (pdata) {
+            memset(pdata, 0, pcap);
             memcpy(pdata, body, blen);
             httpcAddPostDataRaw(&ctx, (const u32*)pdata, (u32)blen);
-            linearFree(pdata);
         }
     }
 
     rc = httpcBeginRequest(&ctx);
-    if (R_FAILED(rc)) { httpcCloseContext(&ctx); return NET_FAIL; }
+    if (R_FAILED(rc)) {
+        if (pdata) linearFree(pdata);
+        httpcCloseContext(&ctx);
+        linearFree(aligned);
+        return NET_FAIL;
+    }
 
     u32 code = 0;
     httpcGetResponseStatusCodeTimeout(&ctx, &code, HTTP_TIMEOUT_NS);
@@ -168,7 +189,9 @@ NetStatus http_post(const char* url, const char* body, NetResult* out) {
 
     u32 got = 0;
     char* buf = read_body(&ctx, &got);
+    if (pdata) linearFree(pdata);
     httpcCloseContext(&ctx);
+    linearFree(aligned);
     if (!buf) return NET_FAIL;
 
     out->data = buf;
@@ -187,19 +210,30 @@ NetStatus http_download(const char* url, const char* save_path,
 
     httpcContext ctx;
     Result rc = httpcOpenContext(&ctx, HTTPC_METHOD_GET, aligned, 0);
-    linearFree(aligned);
-    if (R_FAILED(rc)) { fclose(fp); return NET_FAIL; }
+    if (R_FAILED(rc)) {
+        linearFree(aligned);
+        fclose(fp);
+        return NET_FAIL;
+    }
 
     apply_default_headers(&ctx);
     apply_ssl(&ctx);
 
     rc = httpcBeginRequest(&ctx);
-    if (R_FAILED(rc)) { httpcCloseContext(&ctx); fclose(fp); return NET_FAIL; }
+    if (R_FAILED(rc)) {
+        httpcCloseContext(&ctx);
+        linearFree(aligned);
+        fclose(fp);
+        return NET_FAIL;
+    }
 
     u32 code = 0;
     httpcGetResponseStatusCodeTimeout(&ctx, &code, HTTP_TIMEOUT_NS);
     if (code < 200 || code >= 300) {
-        httpcCloseContext(&ctx); fclose(fp); return NET_FAIL;
+        httpcCloseContext(&ctx);
+        linearFree(aligned);
+        fclose(fp);
+        return NET_FAIL;
     }
 
     u32 total = 0;
@@ -207,8 +241,13 @@ NetStatus http_download(const char* url, const char* save_path,
 
     /* Download in chunks. httpcReceiveData fills the buffer; the actual
      * byte count is the delta of the download-size state before/after. */
-    u8* chunk = (u8*)linearAlloc(0x10000);  /* 64 KiB aligned buffer */
-    if (!chunk) { httpcCloseContext(&ctx); fclose(fp); return NET_FAIL; }
+    u8* chunk = (u8*)linearMemAlign(0x10000, 0x1000);  /* 64 KiB 0x1000-aligned buffer */
+    if (!chunk) {
+        httpcCloseContext(&ctx);
+        linearFree(aligned);
+        fclose(fp);
+        return NET_FAIL;
+    }
 
     u32 downloaded = 0;
     NetStatus status = NET_OK;
@@ -233,6 +272,7 @@ NetStatus http_download(const char* url, const char* save_path,
 
     linearFree(chunk);
     httpcCloseContext(&ctx);
+    linearFree(aligned);
     fclose(fp);
     return status;
 }

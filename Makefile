@@ -76,9 +76,9 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 export OUTPUT   :=      $(CURDIR)/$(TARGET)
 export TOPDIR   :=      $(CURDIR)
 
-export VPATH    :=      $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-                        $(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir)) \
-                        $(foreach dir,$(DATA),$(CURDIR)/$(dir))
+export VPATH    :=      $(foreach dir,$(SOURCES),$(TOPDIR)/$(dir)) \
+                        $(foreach dir,$(GRAPHICS),$(TOPDIR)/$(dir)) \
+                        $(foreach dir,$(DATA),$(TOPDIR)/$(dir))
 
 export DEPSDIR  :=      $(CURDIR)/$(BUILD)
 
