@@ -185,7 +185,8 @@ cia: all resources/banner.bin
 	        -rsf resources/app.rsf \
 	        -elf $(TARGET).elf \
 	        -icon $(TARGET).smdh \
-	        -banner resources/banner.bin
+	        -banner resources/banner.bin \
+	        -DROMFS_PATH="$(ROMFS)"
 	@echo "built ... $(TARGET).cia"
 
 #---------------------------------------------------------------------------------
