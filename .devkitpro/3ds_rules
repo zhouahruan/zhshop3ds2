@@ -1,0 +1,44 @@
+#---------------------------------------------------------------------------------
+# 3DS rules - matches standard devkitPro 3ds_rules
+#---------------------------------------------------------------------------------
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+include $(DEVKITARM)/base_rules
+
+#---------------------------------------------------------------------------------
+# 3DS specific paths
+#---------------------------------------------------------------------------------
+export CTRULIB		?=	/opt/devkitpro/libctru
+export PORTLIBS		:=	/opt/devkitpro/portlibs/3ds
+export PORTLIBS_PREFIX	:=	$(PORTLIBS)
+
+#---------------------------------------------------------------------------------
+# 3DSX creation tool
+#---------------------------------------------------------------------------------
+export _3DSXTOOL	:=	3dsxtool
+export SMDHTOOL		:=	smdhtool
+export MAKEROM		:=	makerom
+export BANNERTOOL	:=	bannertool
+export TEX3DS		:=	tex3ds
+
+#---------------------------------------------------------------------------------
+# linker specs for 3DS homebrew
+#---------------------------------------------------------------------------------
+export SPECS		:=	3dsx.specs
+
+#---------------------------------------------------------------------------------
+# canned command sequence for binary data
+#---------------------------------------------------------------------------------
+define bin2o
+	bin2s $< | $(AS) -o $(@)
+	echo "extern const u8" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(<F) | tr . _)`.h
+	echo "extern const u8" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(<F) | tr . _)`.h
+	echo "extern const u32" `(echo $(<F) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(<F) | tr . _)`.h
+endef
+
+#---------------------------------------------------------------------------------
+%.bin.o %_bin.h : %.bin
+	@echo $(notdir $<)
+	@$(bin2o)

@@ -1,0 +1,3 @@
+# Empty marker — replace with PNG/BCFNT assets when ready.
+# Files in this folder are packed into the romfs section of the cia
+# and accessible at runtime via "romfs:/..." paths.

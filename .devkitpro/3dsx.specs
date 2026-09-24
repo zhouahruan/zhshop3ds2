@@ -1,0 +1,12 @@
+# 3DS homebrew linker specs (matches standard libctru 3dsx.specs)
+*startfile:
+	crti%O%s crt0%O%s crtbegin%O%s
+
+*endfile:
+	crtend%O%s crtn%O%s
+
+*lib:
+	%{!nostdlib:-lcitro2d -lcitro3d -lctru -lm}
+
+*link:
+	-T%:3dsx.ld
